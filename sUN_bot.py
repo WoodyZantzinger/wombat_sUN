@@ -1,65 +1,72 @@
 __author__ = 'woodyzantzinger'
 
-
-#    0
-#  3 X 1
-#    2
-
-
 def wombat(state, time_left):
 
-    #Get core variables
 
-    directions = state["path"]
-    orientation = get_orientation(state["arena"])
+    #Get core variables
+    if "path" in state:
+        directions = state["path"]
+    else:
+        directions = {}
+    orientation = state["arena"][3][3]["contents"]["orientation"]
 
 
     #Define Functions
-    def path_to_food(arena):
-        frontier = Queue()
-        visited = {}
+
+    def path_to(arena, type):
+        frontier = []
+        came_from = {}
         goal = None
 
         start = arena[3][3]
-        start["coords"] = {3, 3}
+        start["coords"] = [3, 3]
 
-        frontier.put(start)
-        came_from[start] = None
+        frontier.append(start)
+        came_from[str(start["coords"])] = None
 
-        while not frontier.empty():
-            current = frientier.get()
+        while len(frontier) > 0 and goal == None:
+            current = frontier.pop(0)
             x, y = current["coords"]
-            for xDiff in range(-1, 1):
-                for yDiff in range(-1, 1):
-                    next = arena[x+xDiff][y+yDiff]
-                    if next not in came_from and (next["contents"]["type"] == "food" or next["contents"]["type"] == "open"):
-                        next["coords"] = {x+xDiff,y+yDiff}
-                        frontier.put(next)
-                        came_from[next] = {x,y}
-                        if next[""] == "food":
+
+            for var in {"x","y"}:
+                for Diff in {-1, 1}:
+                    if var == "x":
+                        if ((x+Diff) < 0 or (x+Diff) > 6): continue
+                        next = arena[x+Diff][y]
+                        next["coords"] = [x + Diff, y]
+                    if var == "y":
+                        if ((y+Diff) < 0 or (y+Diff) > 6): continue
+                        next = arena[x][y+Diff]
+                        next["coords"] = [x, y + Diff]
+
+                    if (next["contents"]["type"] == type or next["contents"]["type"] == "open") and str(next["coords"]) not in came_from:
+                        frontier.append(next)
+                        came_from[str(next["coords"])] = current
+
+                        if next["contents"]["type"] == type:
                             goal = next
                             break
 
         if goal != None:
             path = [goal]
             current = goal
-            while current != start:
-                current = came_from[current]
-                path.append(current)
-            path.reverse()
-            return path
         else:
-            return None
+            #return a path to the furthest area we can get to
+            available_spaces = []
+            tmp = came_from.keys()
+            for x in tmp: available_spaces.append(eval(x))
 
-    def get_orientation(arena):
-        return arena[3][3]["contents"]["orientation"]
+            def getKey(item):
+                return abs((item[0]+item[1])-6)
 
-    def nearest_food(state):
-        for row in state["arena"]:
-            for block in row:
-                if block["contents"]["type"] == "food":
-                    return [state.index(row[0]), row.index(block)]
-        return [-1, -1]
+            goal = came_from[ str(sorted(available_spaces, key = getKey).pop()) ]
+            path = [goal]
+            current = goal
+
+        while current != start:
+            current = came_from[str(current["coords"])]
+            path.append(current)
+        return path[:-1]
 
     def move():
         return {
@@ -86,13 +93,13 @@ def wombat(state, time_left):
             if orientation == "e": action = "left"
             if orientation == "w": action = "right"
         if dir == "e":
-            if orientation == "s": action = "left"
-            if orientation == "n": action = "right"
+            if orientation == "s": action = "right"
+            if orientation == "n": action = "left"
             if orientation == "w": action = "about-face"
         if dir == "w":
-            if orientation == "s": action = "right"
+            if orientation == "s": action = "left"
             if orientation == "e": action = "about-face"
-            if orientation == "n": action = "left"
+            if orientation == "n": action = "right"
         return {
             'command': {
                 'action': 'turn',
@@ -107,46 +114,54 @@ def wombat(state, time_left):
             }
         }
 
-    #CORE LOGIC
+    def move_to(x, y):
+        if y == 3:
+            # We need to move up, down
 
-    if len(directions) < 1:
-        #We have no previous directions, find some
-        directions = path_to_food(state["arena"])
-    else:
-        #peek at top, turn if needed. If facing the right way, pop off and move
-        x,y = directions[len(directions-1)]["coords"]
-        if x == 3:
-            #We need to move up, down
-
-            if y > 3:
-                #move up!
+            if x < 3:
+                # move up!
                 if orientation == "n":
                     directions.pop()
                     return move()
                 else:
-                    turn_to("n")
+                    return turn_to("n")
             else:
-                #move down!
+                # move down!
                 if orientation == "s":
                     directions.pop()
                     return move()
                 else:
-                    turn_to("s")
+                    return turn_to("s")
 
-        elif y == 3:
-            #we need to move left / right
-            if x < 3:
-                #move left!
+        elif x == 3:
+            # we need to move left / right
+            if y < 3:
+                # move left!
                 if orientation == "w":
                     directions.pop()
                     return move()
                 else:
-                    turn_to("w")
+                    return turn_to("w")
 
             else:
-                #move right!
+                # move right!
                 if orientation == "e":
                     directions.pop()
                     return move()
                 else:
                     return turn_to("e")
+
+
+    #CORE LOGIC
+
+    #find food, if none, find another space to go
+
+    directions = path_to(state["arena"], "food")
+
+    if directions is None:
+        #We didn't find any food so we explore
+        directions = explore(state["arena"])
+
+
+    x, y = directions[len(directions) - 1]["coords"]
+    return move_to(x, y)
