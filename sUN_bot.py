@@ -86,20 +86,20 @@ def wombat(state, time_left):
 
         if dir == "n":
             if orientation == "s": action = "about-face"
-            if orientation == "e": action = "right"
-            if orientation == "w": action = "left"
-        if dir == "s":
-            if orientation == "n": action = "about-face"
             if orientation == "e": action = "left"
             if orientation == "w": action = "right"
+        if dir == "s":
+            if orientation == "n": action = "about-face"
+            if orientation == "e": action = "right"
+            if orientation == "w": action = "left"
         if dir == "e":
-            if orientation == "s": action = "right"
-            if orientation == "n": action = "left"
+            if orientation == "s": action = "left"
+            if orientation == "n": action = "right"
             if orientation == "w": action = "about-face"
         if dir == "w":
-            if orientation == "s": action = "left"
+            if orientation == "s": action = "right"
             if orientation == "e": action = "about-face"
-            if orientation == "n": action = "right"
+            if orientation == "n": action = "left"
         return {
             'command': {
                 'action': 'turn',
