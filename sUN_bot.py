@@ -28,24 +28,20 @@ def wombat(state, time_left):
             current = frontier.pop(0)
             x, y = current["coords"]
 
-            for var in {"x","y"}:
-                for Diff in {-1, 1}:
-                    if var == "x":
-                        if ((x+Diff) < 0 or (x+Diff) > 6): continue
-                        next = arena[x+Diff][y]
-                        next["coords"] = [x + Diff, y]
-                    if var == "y":
-                        if ((y+Diff) < 0 or (y+Diff) > 6): continue
-                        next = arena[x][y+Diff]
-                        next["coords"] = [x, y + Diff]
+            for dif in [{-1,0}, {1,0}, {0,-1}, {0,1}] :
+                if ((x+dif[0]) < 0 or (x+dif[0]) > 6): continue
+                if ((y + dif[1]) < 0 or (y + dif[1]) > 6): continue
 
-                    if (next["contents"]["type"] == type or next["contents"]["type"] == "open") and str(next["coords"]) not in came_from:
-                        frontier.append(next)
-                        came_from[str(next["coords"])] = current
+                next = arena[x+dif[0]][y+dif[1]]
+                next["coords"] = [x + dif[0], y + dif[1]]
 
-                        if next["contents"]["type"] == type:
-                            goal = next
-                            break
+                if (next["contents"]["type"] == type or next["contents"]["type"] == "open") and str(next["coords"]) not in came_from:
+                    frontier.append(next)
+                    came_from[str(next["coords"])] = current
+
+                    if next["contents"]["type"] == type:
+                        goal = next
+                        break
 
         if goal != None:
             path = [goal]
