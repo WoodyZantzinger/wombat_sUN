@@ -2,14 +2,13 @@ __author__ = 'woodyzantzinger'
 
 def wombat(state, time_left):
 
-
     #Get core variables
     if "path" in state:
         directions = state["path"]
     else:
         directions = {}
-    orientation = state["arena"][3][3]["contents"]["orientation"]
 
+    orientation = state["arena"][3][3]["contents"]["orientation"]
 
     #Define Functions
 
@@ -28,7 +27,7 @@ def wombat(state, time_left):
             current = frontier.pop(0)
             x, y = current["coords"]
 
-            for dif in [{-1,0}, {1,0}, {0,-1}, {0,1}] :
+            for dif in [[-1,0], [1,0], [0,-1], [0,1]] :
                 if ((x+dif[0]) < 0 or (x+dif[0]) > 6): continue
                 if ((y + dif[1]) < 0 or (y + dif[1]) > 6): continue
 
@@ -150,14 +149,10 @@ def wombat(state, time_left):
 
     #CORE LOGIC
 
+    #find things to shoot
+
     #find food, if none, find another space to go
-
     directions = path_to(state["arena"], "food")
-
-    if directions is None:
-        #We didn't find any food so we explore
-        directions = explore(state["arena"])
-
 
     x, y = directions[len(directions) - 1]["coords"]
     return move_to(x, y)
